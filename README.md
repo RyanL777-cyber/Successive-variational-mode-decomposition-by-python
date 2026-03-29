@@ -1,4 +1,5 @@
 # SVMD Translation Audit
+**Successive Variational Mode Decomposition (SVMD)** is a data-driven signal decomposition method.
 
 This folder is organized as a GitHub-ready package for an SVMD translation and validation project.
 
@@ -128,6 +129,8 @@ This is intentionally useful for readers: it immediately shows that the project 
 - why the project became an engineering-audit problem rather than a simple code port
 
 ## Why This Package Exists
+### 💡 The Core Finding: Syntax vs. Math
+The numerical gap in spectrum validation (`uhat_nrmse`) stems from a subtle syntax error in the original MATLAB script (`svmd.m`). The original code used a single quote `'` (conjugate transpose) instead of `.'` (regular transpose) when calculating the output mode spectrum. This inadvertently caused a phase reversal. By simulating this exact syntax behavior in Python, the error metric drops to near-zero, proving the algorithmic port is mathematically sound and isolating the root cause to a language-specific syntax oversight.
 
 This package is designed to be understandable to a hiring manager, interviewer, collaborator, or another code agent without extra verbal context.
 
@@ -140,3 +143,14 @@ The intended takeaway is:
 ## Attribution
 
 The SVMD method itself comes from the original work by Mojtaba Nazari and Sayed Mahmoud Sakhaei. The bundled MATLAB files and reference data are included only as a technical baseline for translation and validation. See `docs/THIRD_PARTY_NOTICE.md` and `third_party/svmd_original_demo/license.txt`.
+
+## 📚 References & Original Sources
+
+1. **Original Paper:**
+   The theoretical foundation and mathematical proofs of the SVMD algorithm can be found in the original paper:
+   > Mojtaba Nazari and Sayed Mahmoud Sakhaei, *"Successive Variational Mode Decomposition,"* Signal Processing, vol. 174, p. 107610, 2020.  
+   > 🔗 **[Read the Paper (DOI)](https://doi.org/10.1016/j.sigpro.2020.107610)**
+
+2. **Original MATLAB Implementation:**
+   The original MATLAB source code provided by the authors, which served as the baseline for this translation and audit, is available on MathWorks File Exchange:
+   > 🔗 **[Successive Variational Mode Decomposition (SVMD.m) by Mojtaba Nazari](https://www.mathworks.com/matlabcentral/fileexchange/98649-successive-variational-mode-decomposition-svmd-m)**
