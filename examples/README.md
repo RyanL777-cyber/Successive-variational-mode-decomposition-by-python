@@ -1,6 +1,6 @@
 # Examples
 
-This folder shows the two fastest entry points for a reviewer.
+Three runnable entry points, covering both the original prototype and the refactored OOP package.
 
 ## 1. Full Python parity validation
 
@@ -30,6 +30,33 @@ What it does:
 - runs only the first few extracted modes
 - prints one-sided accumulation diagnostics
 - is useful for demonstrating how the parity investigation was performed
+
+## 3. OOP package runner (refactored version)
+
+Run:
+
+```bash
+python examples/run_svmd.py
+```
+
+Common options:
+
+```bash
+python examples/run_svmd.py --stopc 2          # reconstruction-based stopping
+python examples/run_svmd.py --max-modes 8      # cap at 8 modes
+python examples/run_svmd.py --no-plot          # skip matplotlib
+python examples/run_svmd.py --compare-prototype  # verify parity with svmd_prototype.py
+python examples/run_svmd.py --no-ref --no-plot   # fastest: no MATLAB reference, no plot
+```
+
+What it does:
+
+- uses the refactored `src/svmd/` package (Strategy Pattern + OOP)
+- loads the same bundled reference data as the prototype examples
+- prints identical validation metrics to the prototype
+- optional `--compare-prototype` flag confirms bit-for-bit parity on the spot
+
+---
 
 ## MATLAB reference run
 

@@ -1,5 +1,4 @@
 # SVMD Translation Audit
-**Successive Variational Mode Decomposition (SVMD)** is a data-driven signal decomposition method.
 
 This folder is organized as a GitHub-ready package for an SVMD translation and validation project.
 
@@ -13,54 +12,64 @@ The point is not only to show a port of SVMD. The stronger engineering story is 
 
 ## What Is Included
 
-- `src/svmd_prototype.py`
-  - the main Python translation and validation entry point
-- `third_party/svmd_original_demo/`
-  - bundled original MATLAB reference code and the minimum reference assets needed for reproduction
-- `examples/`
-  - runnable entry points for a quick validation demo and a shorter debug-style run
-- `results/`
-  - saved outputs generated from the bundled example runs
-- `docs/ENGINEERING_CASE_STUDY.md`
-  - the interview-ready writeup of the debugging process
-- `docs/SVMD_translation_notes.md`
-  - notes collected during MATLAB-to-Python translation
-- `docs/THIRD_PARTY_NOTICE.md`
-  - copyright and redistribution guidance for the bundled third-party files
+This project has two layers that build on each other.
+
+**Layer 1 — Translation audit** (`src/svmd_prototype.py`):
+the original MATLAB-to-Python port with full validation metrics.
+The engineering story here is the audit process itself: tracing why a translation
+can look correct at the mode level while still disagreeing on some metrics,
+and narrowing that gap with controlled experiments.
+
+**Layer 2 — OOP refactor** (`src/svmd/`):
+the prototype rewritten with Strategy Pattern + OOP to decouple math from control.
+Every numerical operation lives in `NumpyBackend` and can be swapped for a C++ backend
+without touching the loop logic or stopping criteria.
+Verified bit-for-bit identical to the prototype across all stopc=1~4 combinations.
+
+Other contents:
+- `third_party/svmd_original_demo/` — bundled MATLAB reference code and validation assets
+- `examples/` — runnable entry points (prototype validation + OOP runner)
+- `results/` — saved outputs from the example runs
+- `docs/ENGINEERING_CASE_STUDY.md` — writeup of the debugging process
+- `docs/DEVELOPER.md` — which file to edit for each type of change (OOP package)
 
 ## Repo Layout
 
 ```text
-For github/
+.
 |- README.md
 |- requirements.txt
 |- src/
-|  `- svmd_prototype.py
+|  |- svmd_prototype.py          # Layer 1: monolithic prototype
+|  `- svmd/                      # Layer 2: OOP refactor
+|     |- __init__.py
+|     |- config.py               # SVMDConfig (all params)
+|     |- interfaces.py           # Strategy ABCs
+|     |- solver.py               # 3 nested loops (control only)
+|     |- pipeline.py             # SVMDPipeline (top-level API)
+|     |- validation.py           # SVMDValidator
+|     |- backends/
+|     |  |- numpy_backend.py     # all math lives here
+|     |  `- cpp_backend.py       # C++ stub (future)
+|     |- stopping/criteria.py    # stopc 1~4
+|     `- schedule/alpha.py       # alpha growth schedule
 |- examples/
 |  |- README.md
-|  |- run_validation.py
-|  `- run_debug_trace.py
+|  |- run_validation.py          # prototype: parity check vs MATLAB
+|  |- run_debug_trace.py         # prototype: short debug run
+|  `- run_svmd.py                # OOP package runner
 |- results/
-|  |- README.md
 |  |- validation_output.txt
 |  `- debug_trace_output.txt
 |- docs/
 |  |- ENGINEERING_CASE_STUDY.md
+|  |- DEVELOPER.md               # which file to edit for what
 |  |- SVMD_translation_notes.md
 |  `- THIRD_PARTY_NOTICE.md
 `- third_party/
    `- svmd_original_demo/
-      |- README.md
-      |- license.txt
-      |- svmd.m
-      |- test_svmd.m
-      |- ECG.mat
-      |- signal.csv
-      |- params.csv
-      |- u.csv
-      |- omega.csv
-      |- uhat_real.csv
-      `- uhat_imag.csv
+      |- svmd.m  test_svmd.m  ECG.mat
+      `- signal.csv  params.csv  u.csv  omega.csv  uhat_real.csv  uhat_imag.csv
 ```
 
 ## Quick Start
@@ -71,28 +80,31 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
-Run the main Python parity validation:
+**Layer 1 — run the prototype validation** (audit story):
 
 ```bash
-python examples/run_validation.py
+python examples/run_validation.py      # parity check vs MATLAB, stopc=2
+python examples/run_debug_trace.py     # short debug trace, first 5 modes
 ```
 
-This public validation wrapper runs the Python implementation with `stopc=2`.
-
-Run a shorter debug-oriented example:
+**Layer 2 — run the OOP package** (architecture story):
 
 ```bash
-python examples/run_debug_trace.py
+python examples/run_svmd.py                        # default: stopc=4, full validation
+python examples/run_svmd.py --stopc 2              # change stopping criterion
+python examples/run_svmd.py --max-modes 8          # cap modes
+python examples/run_svmd.py --compare-prototype    # live parity check vs prototype
+python examples/run_svmd.py --no-ref --no-plot     # fastest run
 ```
 
-Saved example outputs can be found in:
+Saved example outputs:
 
 ```text
 results/validation_output.txt
 results/debug_trace_output.txt
 ```
 
-If MATLAB is available, run the bundled original reference demo:
+If MATLAB is available:
 
 ```matlab
 cd('third_party/svmd_original_demo');
@@ -129,8 +141,6 @@ This is intentionally useful for readers: it immediately shows that the project 
 - why the project became an engineering-audit problem rather than a simple code port
 
 ## Why This Package Exists
-### 💡 The Core Finding: Syntax vs. Math
-The numerical gap in spectrum validation (`uhat_nrmse`) stems from a subtle syntax error in the original MATLAB script (`svmd.m`). The original code used a single quote `'` (conjugate transpose) instead of `.'` (regular transpose) when calculating the output mode spectrum. This inadvertently caused a phase reversal. By simulating this exact syntax behavior in Python, the error metric drops to near-zero, proving the algorithmic port is mathematically sound and isolating the root cause to a language-specific syntax oversight.
 
 This package is designed to be understandable to a hiring manager, interviewer, collaborator, or another code agent without extra verbal context.
 
@@ -143,14 +153,3 @@ The intended takeaway is:
 ## Attribution
 
 The SVMD method itself comes from the original work by Mojtaba Nazari and Sayed Mahmoud Sakhaei. The bundled MATLAB files and reference data are included only as a technical baseline for translation and validation. See `docs/THIRD_PARTY_NOTICE.md` and `third_party/svmd_original_demo/license.txt`.
-
-## 📚 References & Original Sources
-
-1. **Original Paper:**
-   The theoretical foundation and mathematical proofs of the SVMD algorithm can be found in the original paper:
-   > Mojtaba Nazari and Sayed Mahmoud Sakhaei, *"Successive Variational Mode Decomposition,"* Signal Processing, vol. 174, p. 107610, 2020.  
-   > 🔗 **[Read the Paper (DOI)](https://doi.org/10.1016/j.sigpro.2020.107610)**
-
-2. **Original MATLAB Implementation:**
-   The original MATLAB source code provided by the authors, which served as the baseline for this translation and audit, is available on MathWorks File Exchange:
-   > 🔗 **[Successive Variational Mode Decomposition (SVMD.m) by Mojtaba Nazari](https://www.mathworks.com/matlabcentral/fileexchange/98649-successive-variational-mode-decomposition-svmd-m)**
