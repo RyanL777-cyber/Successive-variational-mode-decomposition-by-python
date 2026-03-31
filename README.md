@@ -153,3 +153,17 @@ The intended takeaway is:
 ## Attribution
 
 The SVMD method itself comes from the original work by Mojtaba Nazari and Sayed Mahmoud Sakhaei. The bundled MATLAB files and reference data are included only as a technical baseline for translation and validation. See `docs/THIRD_PARTY_NOTICE.md` and `third_party/svmd_original_demo/license.txt`.
+
+
+
+## 📚 References & Original Sources
+
+1. **Original Paper:**
+   The theoretical foundation and mathematical proofs of the SVMD algorithm can be found in the original paper:
+   > Mojtaba Nazari and Sayed Mahmoud Sakhaei, *"Successive Variational Mode Decomposition,"* Signal Processing, vol. 174, p. 107610, 2020.  
+   > 🔗 **[Read the Paper (DOI)](https://doi.org/10.1016/j.sigpro.2020.107610)**
+
+2. **Original MATLAB Implementation:**
+   The original MATLAB source code provided by the authors, which served as the baseline for this translation and audit, is available on MathWorks File Exchange:
+   > 🔗 **[Successive Variational Mode Decomposition (SVMD.m) by Mojtaba Nazari](https://www.mathworks.com/matlabcentral/fileexchange/98649-successive-variational-mode-decomposition-svmd-m)**
+
